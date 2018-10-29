@@ -1,0 +1,12 @@
+[package]
+name = "net_tester"
+version = "0.1.0"
+authors = ["Steven Stanfield <stanfield@scarecrowtech.com>"]
+
+[dependencies]
+glib = "*"
+gdk = "*"
+gtk = "^0.5.0"
+relm = "^0.15.0"
+relm-derive = "^0.15.0"
+nix = "0.11.0"
