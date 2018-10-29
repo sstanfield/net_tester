@@ -34,7 +34,7 @@ fn get_address(iface: &str) -> Option<nix::sys::socket::InetAddr> {
 }
 
 fn can_ping(address: &str) -> bool {
-    let status = Command::new("/sbin/ping")
+    let status = Command::new("/bin/ping")
         .arg("-c").arg("2").arg("-i").arg(".5").arg(address)
         .stdout(Stdio::null())
         .stderr(Stdio::null())
