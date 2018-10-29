@@ -104,7 +104,5 @@ pub fn test_network(ifname: &str, tx: std::sync::mpsc::Sender<Status>) -> Result
             return Err(());
         }
     }
-
-    Ok(())
 }
 

@@ -12,8 +12,6 @@ use gtk::{
     ButtonExt,
     ContainerExt,
     Inhibit,
-    Label,
-    LabelExt,
     WidgetExt,
     Window,
     WindowType,
@@ -37,15 +35,12 @@ use net_tester::Status;
 use net_tester::test_network;
 
 struct Model {
-    counter: i32,
-    text: Vec<String>,
 }
 
 #[derive(Msg)]
 enum Msg {
     Message(Status),
-    Decrement,
-    Increment,
+    Rerun,
     Quit,
 }
 
@@ -54,14 +49,12 @@ enum Msg {
 struct Widgets {
     text: TextView,
     text_buffer: TextBuffer,
-    counter_label: Label,
-    minus_button: Button,
-    plus_button: Button,
+    rerun_button: Button,
     window: Window,
 }
 
 struct Win {
-    model: Model,
+    _model: Model,
     widgets: Widgets,
 }
 
@@ -74,14 +67,10 @@ impl Update for Win {
     type Msg = Msg;
 
     fn model(_: &Relm<Self>, _: ()) -> Model {
-        Model {
-            counter: 0,
-            text: Vec::new(),
-        }
+        Model { }
     }
 
     fn update(&mut self, event: Msg) {
-        let label = &self.widgets.counter_label;
         let text = &self.widgets.text;
         let text_buffer = &self.widgets.text_buffer;
 
@@ -110,24 +99,7 @@ impl Update for Win {
                 text_buffer.insert_at_cursor("\n");
                 text.scroll_mark_onscreen(&text_buffer.get_insert().unwrap());
             }
-            Msg::Decrement => {
-                self.model.counter -= 1;
-                self.model.text.push("Decrement".to_string());
-                //self.model.text = self.model.text.clone() + "\nDecrement";
-                // Manually update the view.
-                label.set_text(&self.model.counter.to_string());
-                //text_buffer.set_text(&self.model.text.join("\n"));
-                text_buffer.insert_at_cursor("Decrement XXXXXX\n");
-                text.scroll_mark_onscreen(&text_buffer.get_insert().unwrap());
-            },
-            Msg::Increment => {
-                //self.model.text = self.model.text.clone() + "\nIncrement";
-                self.model.text.push("Increment".to_string());
-                self.model.counter += 1;
-                label.set_text(&self.model.counter.to_string());
-                //text_buffer.set_text(&self.model.text.join("\n"));
-                text_buffer.insert_at_cursor("Increment XXXXXX\n");
-                text.scroll_mark_onscreen(&text_buffer.get_insert().unwrap());
+            Msg::Rerun => {
             },
             Msg::Quit => gtk::main_quit(),
         }
@@ -177,14 +149,8 @@ impl Widget for Win {
         text.set_vexpand(true);
         text.set_valign(gtk::Align::Fill);
 
-        let plus_button = Button::new_with_label("+");
-        grid.attach(&plus_button, 0, 0, 1, 1);
-
-        let counter_label = Label::new("0");
-        grid.attach(&counter_label, 1, 0, 1, 1);
-
-        let minus_button = Button::new_with_label("-");
-        grid.attach(&minus_button, 2, 0, 1, 1);
+        let rerun_button = Button::new_with_label("Rerun");
+        grid.attach(&rerun_button, 0, 0, 3, 1);
 
         let window = Window::new(WindowType::Toplevel);
 
@@ -193,18 +159,15 @@ impl Widget for Win {
         window.show_all();
 
         // Send the message Increment when the button is clicked.
-        connect!(relm, plus_button, connect_clicked(_), Msg::Increment);
-        connect!(relm, minus_button, connect_clicked(_), Msg::Decrement);
+        connect!(relm, rerun_button, connect_clicked(_), Msg::Rerun);
         connect!(relm, window, connect_delete_event(_, _), return (Some(Msg::Quit), Inhibit(false)));
 
         Win {
-            model,
+            _model: model,
             widgets: Widgets {
                 text,
                 text_buffer,
-                counter_label,
-                minus_button,
-                plus_button,
+                rerun_button,
                 window,
             },
         }
@@ -212,7 +175,15 @@ impl Widget for Win {
 }
 
 fn main() {
-    let ifname = std::env::args().skip(1).next().unwrap();
+    let args: Vec<String> = std::env::args().collect();
+
+    if args.len() < 1 {
+        println!("Must provide interface to test on as only parameter!");
+        return;
+    }
+    let ifname = String::from(&args[1][..]);
+   // match std::env::args().skip(1).next() { //.unwrap_or_else(|| {
+    println!("Working on {}", ifname);
     let (tx, rx) = std::sync::mpsc::channel();
     gtk::init().map_err(|_| ()).unwrap();
     let win = relm::init::<Win>(()).unwrap();
